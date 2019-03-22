@@ -38,7 +38,7 @@ grid = [[None for x in range(width)] for x in range(height)]
 chk = [[0 for x in range(width)] for x in range(height)]
 
 
-colours = [(1, 1, 1, 1),       # 0 - black (empty)
+colours = [(0, 0, 0, 1),       # 0 - black (empty)
            (0, 1, 1, 1),       # 1 - cyan (long boi)
            (0, 0, 1, 1),       # 2 - blue (J piece)
            (1, 0.647, 0, 1),   # 3 - orange (L piece)
