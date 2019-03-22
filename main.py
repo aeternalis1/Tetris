@@ -7,6 +7,9 @@ from kivy.config import Config
 from kivy.graphics import *
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
+from random import randint
+import time
+from functools import partial
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.set('graphics', 'width', '500')
@@ -20,15 +23,17 @@ class node:
         self.y = y
         self.hori = hori
         self.vert = vert
-        self.col = 0
+        self.col = 7
 
 
 class block:
-    def __init__(self, x, y, t, orient):
+    def __init__(self, y, x, sz, occ, orient, col):
         self.x = x  # coordinates of upper left corner of rotation area
         self.y = y
-        self.t = t  # type of block
+        self.sz = sz    # size of rotation grid
+        self.occ = occ  # grid squares occupied by block
         self.orient = orient  # orientation of block
+        self.col = col
 
 
 width = 10
@@ -38,23 +43,26 @@ grid = [[None for x in range(width)] for x in range(height)]
 chk = [[0 for x in range(width)] for x in range(height)]
 
 
-colours = [(0, 0, 0, 1),       # 0 - black (empty)
-           (0, 1, 1, 1),       # 1 - cyan (long boi)
-           (0, 0, 1, 1),       # 2 - blue (J piece)
-           (1, 0.647, 0, 1),   # 3 - orange (L piece)
-           (1, 1, 0, 1),       # 4 - yellow (square)
-           (0, 0.5, 1, 1),     # 5 - green (S piece)
-           (1, 0, 0, 1),       # 6 - red (Z piece)
-           (0.5, 0, 0.5, 1)]   # 7 - purple (T piece)
+colours = [(0, 1, 1, 1),       # 0 - cyan (long boi)
+           (0, 0, 1, 1),       # 1 - blue (J piece)
+           (1, 0.647, 0, 1),   # 2 - orange (L piece)
+           (1, 1, 0, 1),       # 3 - yellow (square)
+           (0, 0.5, 1, 1),     # 4 - green (S piece)
+           (1, 0, 0, 1),       # 5 - red (Z piece)
+           (0.5, 0, 0.5, 1),   # 6 - purple (T piece)
+           (0, 0, 0, 1)]       # 7 - black (empty)
 
 # format: rotates in x by x grid, with [a,b], [c,d] ... blocks coloured
-types = [[4, 4, [0, 2], [1, 2], [2, 2], [2, 3]],  # long boi (spawns vertical right)
-         [3, 3, [0, 3], [0, 2], [1, 2], [2, 2]],  # J piece (spawns pointy down)
-         [3, 3, [0, 1], [0, 2], [1, 2], [2, 2]],  # L piece (spawns pointy down)
-         [2, 2, [0, 0], [0, 1], [1, 0], [1, 1]],  # square piece
-         [3, 3, [0, 1], [1, 1], [1, 2], [2, 2]],  # S piece (spawns vertical)
-         [3, 3, [0, 2], [1, 2], [1, 1], [2, 1]],  # Z piece (spawns vertical)
-         [3, 3, [0, 1], [1, 0], [1, 1], [1, 2]]]  # T piece (spawns upside down)
+types = [[4, [0, 2], [1, 2], [2, 2], [2, 3]],  # long boi (spawns vertical right)
+         [3, [0, 3], [0, 2], [1, 2], [2, 2]],  # J piece (spawns pointy down)
+         [3, [0, 1], [0, 2], [1, 2], [2, 2]],  # L piece (spawns pointy down)
+         [2, [0, 0], [0, 1], [1, 0], [1, 1]],  # square piece
+         [3, [0, 1], [1, 1], [1, 2], [2, 2]],  # S piece (spawns vertical)
+         [3, [0, 2], [1, 2], [1, 1], [2, 1]],  # Z piece (spawns vertical)
+         [3, [0, 1], [1, 0], [1, 1], [1, 2]]]  # T piece (spawns upside down)
+
+
+cur = [0]
 
 
 for i in range(height):
@@ -74,17 +82,49 @@ def paintGrid(self):
                 Rectangle(pos=(j.x+1, j.y+1), size=(j.hori, j.vert))
 
 
+def dropBlock(self, *largs):
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = cur[0].col
+        if y == 0: # or (grid[y-1][x].col != 7 and [y-cur.y+i[0]-1, cur.x-i[1]] not in cur.occ):
+            return
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = 7
+    cur[0].y -= 1
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = cur[0].col
+    paintGrid(self)
+    Clock.schedule_once(partial(dropBlock, self), 0.5)
+
+
+def runGame(self):
+    alive = 1
+    score = 0
+    probs = [1, 1, 1, 1, 1, 1, 1]   # likelihood of each spawn
+
+    '''
+    probability will work as follows: each value in array represents
+    how many cycles ago that tetromino was last spawned.
+    '''
+
+    while alive:
+        curType = randint(0, 6)
+        cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
+        dropBlock(self)
+
+        alive = 0
+
+
 class MainApp(App):
+
     def build(self):
         self.title = "Tetris"
         parent = Widget()
         paintGrid(parent)
+        runGame(parent)
         return parent
-    def runGame(self):
-        alive = 1
-        score = 0
-        while alive:
-            pass
 
 
 tetris = MainApp()
