@@ -47,13 +47,13 @@ colours = [(0, 1, 1, 1),       # 0 - cyan (long boi)
            (0, 0, 1, 1),       # 1 - blue (J piece)
            (1, 0.647, 0, 1),   # 2 - orange (L piece)
            (1, 1, 0, 1),       # 3 - yellow (square)
-           (0, 0.5, 1, 1),     # 4 - green (S piece)
+           (0, 0.5, 0, 1),     # 4 - green (S piece)
            (1, 0, 0, 1),       # 5 - red (Z piece)
            (0.5, 0, 0.5, 1),   # 6 - purple (T piece)
            (0, 0, 0, 1)]       # 7 - black (empty)
 
 # format: rotates in x by x grid, with [a,b], [c,d] ... blocks coloured
-types = [[4, [0, 2], [1, 2], [2, 2], [2, 3]],  # long boi (spawns vertical right)
+types = [[4, [0, 2], [1, 2], [2, 2], [3, 2]],  # long boi (spawns vertical right)
          [3, [0, 3], [0, 2], [1, 2], [2, 2]],  # J piece (spawns pointy down)
          [3, [0, 1], [0, 2], [1, 2], [2, 2]],  # L piece (spawns pointy down)
          [2, [0, 0], [0, 1], [1, 0], [1, 1]],  # square piece
@@ -63,6 +63,7 @@ types = [[4, [0, 2], [1, 2], [2, 2], [2, 3]],  # long boi (spawns vertical right
 
 
 cur = [0]
+running = [0]
 
 
 for i in range(height):
@@ -87,6 +88,9 @@ def dropBlock(self, *largs):
         y, x = cur[0].y - i[0], cur[0].x + i[1]
         grid[y][x].col = cur[0].col
         if y == 0: # or (grid[y-1][x].col != 7 and [y-cur.y+i[0]-1, cur.x-i[1]] not in cur.occ):
+            curType = randint(0, 6)
+            cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
+            dropBlock(self)
             return
     for i in cur[0].occ:
         y, x = cur[0].y - i[0], cur[0].x + i[1]
@@ -110,11 +114,13 @@ def runGame(self):
     '''
 
     while alive:
-        curType = randint(0, 6)
-        cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
-        dropBlock(self)
+        if not running[0]:
+            running[0] = 1
+            curType = randint(0, 6)
+            cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
+            dropBlock(self)
 
-        alive = 0
+        alive -= 1
 
 
 class MainApp(App):
