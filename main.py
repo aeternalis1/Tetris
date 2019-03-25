@@ -1,4 +1,6 @@
 import kivy
+import sys
+sys.setrecursionlimit(100000000)
 kivy.require('1.10.1')
 
 from kivy.app import App
@@ -87,7 +89,7 @@ def dropBlock(self, *largs):
     for i in cur[0].occ:
         y, x = cur[0].y - i[0], cur[0].x + i[1]
         grid[y][x].col = cur[0].col
-        if y == 0: # or (grid[y-1][x].col != 7 and [y-cur.y+i[0]-1, cur.x-i[1]] not in cur.occ):
+        if y == 0 or (grid[y-1][x].col != 7 and [abs(y-cur[0].y-1), x-cur[0].x] not in cur[0].occ):
             curType = randint(0, 6)
             cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
             dropBlock(self)
@@ -113,14 +115,9 @@ def runGame(self):
     how many cycles ago that tetromino was last spawned.
     '''
 
-    while alive:
-        if not running[0]:
-            running[0] = 1
-            curType = randint(0, 6)
-            cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
-            dropBlock(self)
-
-        alive -= 1
+    curType = randint(0, 6)
+    cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
+    dropBlock(self)
 
 
 class MainApp(App):
