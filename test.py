@@ -56,12 +56,12 @@ colours = [(0, 1, 1, 1),       # 0 - cyan (long boi)
            (0, 0, 0, 1)]       # 7 - black (empty)
 
 # format: rotates in x by x grid, with [a,b], [c,d] ... blocks coloured
-types = [[4, [0, 2], [1, 2], [2, 2], [3, 2]],  # long boi (spawns vertical right)
-         [3, [0, 3], [0, 2], [1, 2], [2, 2]],  # J piece (spawns pointy down)
-         [3, [0, 1], [0, 2], [1, 2], [2, 2]],  # L piece (spawns pointy down)
+types = [[4, [1, 0], [1, 1], [1, 2], [1, 3]],  # long boi (spawns vertical right)
+         [3, [0, 0], [1, 0], [1, 1], [1, 2]],  # J piece (spawns pointy down)
+         [3, [1, 0], [1, 1], [1, 2], [0, 2]],  # L piece (spawns pointy down)
          [2, [0, 0], [0, 1], [1, 0], [1, 1]],  # square piece
-         [3, [0, 1], [1, 1], [1, 2], [2, 2]],  # S piece (spawns vertical)
-         [3, [0, 2], [1, 2], [1, 1], [2, 1]],  # Z piece (spawns vertical)
+         [3, [1, 0], [1, 1], [0, 1], [0, 2]],  # S piece (spawns vertical)
+         [3, [0, 0], [0, 1], [1, 1], [1, 2]],  # Z piece (spawns vertical)
          [3, [0, 1], [1, 0], [1, 1], [1, 2]]]  # T piece (spawns upside down)
 
 
@@ -141,6 +141,17 @@ def shift(val):
         grid[y][x].col = cur[0].col
 
 
+def rotate(val):
+    if not cur[0]:
+        return
+    mod = [0, 0]
+    # ori = (cur[0].orient + val) % 4
+    occ2 = []
+    for i in cur[0].occ:
+        if val:
+            pass
+
+
 class TetrisGame(Widget):
 
     def __init__(self, **kwargs):
@@ -154,7 +165,7 @@ class TetrisGame(Widget):
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'up':
-            pass
+            rotate(1)
         elif keycode[1] == 'down':
             pass
         elif keycode[1] == 'left':
