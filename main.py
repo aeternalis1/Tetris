@@ -56,12 +56,12 @@ colours = [(0, 1, 1, 1),       # 0 - cyan (long boi)
            (0, 0, 0, 1)]       # 7 - black (empty)
 
 # format: rotates in x by x grid, with [a,b], [c,d] ... blocks coloured
-types = [[4, [0, 2], [1, 2], [2, 2], [3, 2]],  # long boi (spawns vertical right)
-         [3, [0, 3], [0, 2], [1, 2], [2, 2]],  # J piece (spawns pointy down)
-         [3, [0, 1], [0, 2], [1, 2], [2, 2]],  # L piece (spawns pointy down)
+types = [[4, [1, 0], [1, 1], [1, 2], [1, 3]],  # long boi (spawns vertical right)
+         [3, [0, 0], [1, 0], [1, 1], [1, 2]],  # J piece (spawns pointy down)
+         [3, [1, 0], [1, 1], [1, 2], [0, 2]],  # L piece (spawns pointy down)
          [2, [0, 0], [0, 1], [1, 0], [1, 1]],  # square piece
-         [3, [0, 1], [1, 1], [1, 2], [2, 2]],  # S piece (spawns vertical)
-         [3, [0, 2], [1, 2], [1, 1], [2, 1]],  # Z piece (spawns vertical)
+         [3, [1, 0], [1, 1], [0, 1], [0, 2]],  # S piece (spawns vertical)
+         [3, [0, 0], [0, 1], [1, 1], [1, 2]],  # Z piece (spawns vertical)
          [3, [0, 1], [1, 0], [1, 1], [1, 2]]]  # T piece (spawns upside down)
 
 
@@ -75,6 +75,7 @@ for i in range(height):
 
 
 def paintGrid(self):
+    self.canvas.clear()
     with self.canvas:
         Color(1,1,1,1)
         Rectangle(pos=(0,0), size=(500, 621))
@@ -90,10 +91,12 @@ def dropBlock(self, *largs):
     for i in cur[0].occ:
         y, x = cur[0].y - i[0], cur[0].x + i[1]
         grid[y][x].col = cur[0].col
-        if y == 0 or (grid[y-1][x].col != 7 and [abs(y-cur[0].y-1), x-cur[0].x] not in cur[0].occ):
+        if y == 0 or (grid[y-1][x].col != 7 and [i[0]+1, i[1]] not in cur[0].occ):
+            '''
             curType = randint(0, 6)
             cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
             dropBlock(self)
+            '''
             return
     for i in cur[0].occ:
         y, x = cur[0].y - i[0], cur[0].x + i[1]
@@ -121,14 +124,71 @@ def runGame(self):
     dropBlock(self)
 
 
+def shift(val):
+    if not cur[0]:
+        return
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        x += val
+        if x < 0 or x >= 10 or (grid[y][x].col != 7 and [i[0], i[1] + val] not in cur[0].occ):
+            return
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = 7
+    cur[0].x += val
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = cur[0].col
+
+
+def rotate(val):
+    if not cur[0]:
+        return
+    mod = [0, 0]
+    # ori = (cur[0].orient + val) % 4
+    occ2 = []
+    for i in cur[0].occ:
+        if val:
+            pass
+
+
+class TetrisGame(Widget):
+
+    def __init__(self, **kwargs):
+        super(TetrisGame, self).__init__(**kwargs)
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if keycode[1] == 'up':
+            rotate(1)
+        elif keycode[1] == 'down':
+            pass
+        elif keycode[1] == 'left':
+            shift(-1)
+            paintGrid(self)
+        elif keycode[1] == 'right':
+            shift(1)
+            paintGrid(self)
+        elif keycode[1] == 'w':
+            curType = randint(0, 6)
+            cur[0] = block(19, 5 - types[curType][0] // 2, types[curType][0], types[curType][1:], 0, curType)
+            dropBlock(self)
+        return True
+
+
 class MainApp(App):
 
     def build(self):
         self.title = "Tetris"
-        parent = Widget()
-        paintGrid(parent)
-        runGame(parent)
-        return parent
+        game = TetrisGame()
+        paintGrid(game)
+        #runGame(game)
+        return game
 
 
 tetris = MainApp()
