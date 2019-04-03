@@ -145,11 +145,28 @@ def rotate(val):
     if not cur[0]:
         return
     mod = [0, 0]
-    # ori = (cur[0].orient + val) % 4
     occ2 = []
+
     for i in cur[0].occ:
         if val:
-            pass
+            occ2.append([cur[0].sz-i[1]-1, i[0]])
+        else:
+            occ2.append([i[1], cur[0].sz-i[0]-1])
+
+    for i in occ2:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        if y < 0 or (grid[y][x].col != 7 and [i[0], i[1]] not in cur[0].occ):
+            return
+
+    for i in cur[0].occ:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = 7
+
+    for i in occ2:
+        y, x = cur[0].y - i[0], cur[0].x + i[1]
+        grid[y][x].col = cur[0].col
+
+    cur[0].occ = occ2
 
 
 class TetrisGame(Widget):
@@ -166,8 +183,10 @@ class TetrisGame(Widget):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'up':
             rotate(1)
+            paintGrid(self)
         elif keycode[1] == 'down':
-            pass
+            rotate(0)
+            paintGrid(self)
         elif keycode[1] == 'left':
             shift(-1)
             paintGrid(self)
